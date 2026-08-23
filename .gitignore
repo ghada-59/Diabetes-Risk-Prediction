@@ -1,0 +1,24 @@
+# Environnements virtuels
+.venv/
+venv/
+ENV/
+env/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Modèles volumineux ou temporaires
+models/*.pkl
+models/*.joblib
+!models/.gitkeep
+
+# IDEs & Notebooks
+.vscode/
+.idea/
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
