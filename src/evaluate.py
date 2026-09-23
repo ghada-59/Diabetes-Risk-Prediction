@@ -61,7 +61,7 @@ def evaluate_all_models(pipelines: dict, X_test: pd.DataFrame, y_test: pd.Series
         print("\nClassification Report:")
         print(classification_report(y_test, y_pred, target_names=["Healthy (0)", "Diabetic (1)"]))
 
-    # Aggregate and sort summary results prioritizing clinical recall
+    # Aggregate and sort summary results prioritizing recall for comparison
     df_summary = pd.DataFrame(summary_results).sort_values(by="Recall", ascending=False)
     return df_summary
 
