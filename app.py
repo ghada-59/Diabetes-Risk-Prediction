@@ -30,7 +30,7 @@ if pipeline is None:
     )
     st.stop()
 
-st.sidebar.header("Clinical Parameters")
+st.sidebar.header("Input Features")
 
 def user_input_features():
     pregnancies = st.sidebar.number_input("Number of Pregnancies", min_value=0, max_value=20, value=1)
@@ -56,7 +56,7 @@ def user_input_features():
 
 input_df = user_input_features()
 
-st.write("### Patient Profile Data")
+st.write("### Input Data")
 st.dataframe(input_df)
 
 if st.button("Evaluate Risk"):
