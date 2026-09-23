@@ -31,7 +31,7 @@ def train_models(X_train: pd.DataFrame, y_train: pd.Series) -> dict:
     """
     preprocessor = create_preprocessing_pipeline()
 
-    # Encapsulate preprocessing and classification into end-to-end pipelines for production
+    # Encapsulate preprocessing and classification into end-to-end pipelines for reproducibility
     models = {
         "Naive_Bayes": Pipeline([("preprocessor", preprocessor), ("classifier", GaussianNB())]),
         "KNN": Pipeline([("preprocessor", preprocessor), ("classifier", KNeighborsClassifier(n_neighbors=5))]),
