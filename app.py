@@ -9,9 +9,9 @@ st.set_page_config(
     layout="centered",
 )
 
-st.title("🩺 Medical Decision Support System")
-st.subheader("Diabetes Risk Assessment Using Machine Learning")
-st.write("Enter the patient's clinical parameters below to evaluate their risk probability.")
+st.title("🩺 Diabetes Classification Demo")
+st.subheader("Machine Learning on the Pima Indians Diabetes Dataset")
+st.write("Enter the dataset features below to obtain the model's predicted class and estimated probability.")
 
 MODEL_PATH = "models/Random_Forest.joblib"
 
@@ -65,11 +65,11 @@ if st.button("Evaluate Risk"):
     diabetes_probability = probabilities[1] * 100
 
     st.write("---")
-    st.write("### Diagnostic Result")
+    st.write("### Model Prediction")
 
     if prediction == 1:
-        st.error(f"⚠️ **High Risk of Diabetes** (Probability: {diabetes_probability:.1f}%)")
-        st.write("Recommendation: In-depth clinical follow-up and biological screening are advised.")
+        st.error(f"⚠️ **Predicted Class: 1** (Estimated probability: {diabetes_probability:.1f}%)")
+        st.write("This output is a dataset-based machine-learning prediction, not a clinical diagnosis.")
     else:
-        st.success(f"✅ **Low Risk of Diabetes** (Probability: {diabetes_probability:.1f}%)")
-        st.write("Recommendation: Patient constants are currently within standard ranges.")
+        st.success(f"✅ **Predicted Class: 0** (Estimated probability of class 1: {diabetes_probability:.1f}%)")
+        st.write("This output is a dataset-based machine-learning prediction, not a clinical diagnosis.")
