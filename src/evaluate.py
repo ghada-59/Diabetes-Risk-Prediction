@@ -23,18 +23,21 @@ def evaluate_all_models(pipelines: dict, X_test: pd.DataFrame, y_test: pd.Series
         rec = recall_score(y_test, y_pred)
         cm = confusion_matrix(y_test, y_pred)
 
-        summary_results.append({"Model": name, "Accuracy": round(acc, 3), "Recall": round(rec, 3)})
-        print(f"
---- Model: {name} ---")
+        summary_results.append({
+            "Model": name,
+            "Accuracy": round(acc, 3),
+            "Recall": round(rec, 3),
+        })
+
+        print(f"\n--- Model: {name} ---")
         print(f"Accuracy : {acc:.3f}")
         print(f"Recall   : {rec:.3f}")
-        print("
-Confusion Matrix:")
+        print("\nConfusion Matrix:")
         print(cm)
-        print("
-Classification Report:")
+        print("\nClassification Report:")
         print(classification_report(
-            y_test, y_pred,
+            y_test,
+            y_pred,
             target_names=["Healthy (0)", "Diabetic (1)"],
             zero_division=0,
         ))
@@ -49,11 +52,9 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = split_data(df)
     pipelines, cv_results = train_models(X_train, y_train)
 
-    print("
-=== CROSS-VALIDATION MODEL SELECTION ===")
+    print("\n=== CROSS-VALIDATION MODEL SELECTION ===")
     print(cv_results.to_string(index=False))
 
     summary = evaluate_all_models(pipelines, X_test, y_test)
-    print("
-=== HELD-OUT TEST SET SUMMARY ===")
+    print("\n=== HELD-OUT TEST SET SUMMARY ===")
     print(summary.to_string(index=False))
