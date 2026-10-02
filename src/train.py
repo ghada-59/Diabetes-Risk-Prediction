@@ -1,76 +1,57 @@
-import os
+from pathlib import Path
+
 import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
 
 from data_loader import load_raw_data
-from preprocessing import split_data, create_preprocessing_pipeline
+from preprocessing import create_preprocessing_pipeline, split_data
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+MODEL_DIR = PROJECT_ROOT / "models"
 
-def train_models(X_train: pd.DataFrame, y_train: pd.Series) -> dict:
-    """
-    Train and evaluate multiple machine learning models using 
-    Stratified 5-Fold Cross-Validation with recall optimization.
-
-    Parameters:
-    -----------
-    X_train : pd.DataFrame
-        The feature matrix for the training split.
-    y_train : pd.Series
-        The target vector for the training split.
-
-    Returns:
-    --------
-    dict
-        A dictionary mapping model names to their fully fitted Scikit-Learn pipelines.
-    """
-    preprocessor = create_preprocessing_pipeline()
-
-    # Encapsulate preprocessing and classification into end-to-end pipelines for reproducibility
-    models = {
-        "Naive_Bayes": Pipeline([("preprocessor", preprocessor), ("classifier", GaussianNB())]),
-        "KNN": Pipeline([("preprocessor", preprocessor), ("classifier", KNeighborsClassifier(n_neighbors=5))]),
-        "Decision_Tree": Pipeline([("preprocessor", preprocessor), ("classifier", DecisionTreeClassifier(max_depth=4, min_samples_split=5, random_state=42))]),
-        "Random_Forest": Pipeline([("preprocessor", preprocessor), ("classifier", RandomForestClassifier(n_estimators=100, max_depth=5, min_samples_split=4, random_state=42))]),
+def build_models() -> dict[str, Pipeline]:
+    """Create candidate preprocessing + classifier pipelines."""
+    return {
+        "Naive_Bayes": Pipeline([("preprocessor", create_preprocessing_pipeline()), ("classifier", GaussianNB())]),
+        "KNN": Pipeline([("preprocessor", create_preprocessing_pipeline()), ("classifier", KNeighborsClassifier(n_neighbors=5))]),
+        "Decision_Tree": Pipeline([("preprocessor", create_preprocessing_pipeline()), ("classifier", DecisionTreeClassifier(max_depth=4, min_samples_split=5, random_state=42))]),
+        "Random_Forest": Pipeline([("preprocessor", create_preprocessing_pipeline()), ("classifier", RandomForestClassifier(n_estimators=100, max_depth=5, min_samples_split=4, random_state=42))]),
     }
 
-    print("=== CROSS-VALIDATION EVALUATION (5-Fold) ===")
+def train_models(X_train: pd.DataFrame, y_train: pd.Series) -> tuple[dict[str, Pipeline], pd.DataFrame]:
+    """Train candidates and compare them with stratified 5-fold recall."""
+    models = build_models()
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
+    results = []
+    print("=== CROSS-VALIDATION EVALUATION (5-Fold) ===")
     for name, pipeline in models.items():
-        # Evaluate model performance via cross-validation prioritizing recall
         scores = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring="recall")
-        print(f"Model [{name:<15}] -> Mean Recall (CV): {scores.mean():.3f} (+/- {scores.std():.3f})")
-        
-        # Fit the complete pipeline on the entire training set
+        results.append({"Model": name, "Mean_Recall": scores.mean(), "Std_Recall": scores.std()})
+        print(f"Model [{name:<15}] -> Mean Recall: {scores.mean():.3f} (+/- {scores.std():.3f})")
         pipeline.fit(X_train, y_train)
+    results_df = pd.DataFrame(results).sort_values(["Mean_Recall", "Std_Recall"], ascending=[False, True]).reset_index(drop=True)
+    return models, results_df
 
-    return models
-
-
-def save_best_model(trained_models: dict, best_name: str = "Random_Forest"):
-    """
-    Serialize and save the best performing model pipeline to disk.
-
-    Parameters:
-    -----------
-    trained_models : dict
-        A dictionary containing all trained pipelines.
-    best_name : str, default="Random_Forest"
-        The key identifier of the best model to save.
-    """
-    os.makedirs("models", exist_ok=True)
-    joblib.dump(trained_models[best_name], f"models/{best_name}.joblib")
-    print(f"\nComplete model pipeline (Pipeline + {best_name}) successfully saved to models/{best_name}.joblib")
-
+def save_best_model(trained_models: dict[str, Pipeline], cv_results: pd.DataFrame) -> str:
+    """Save the model selected from measured cross-validation recall."""
+    if cv_results.empty:
+        raise ValueError("No cross-validation results are available.")
+    best_name = str(cv_results.iloc[0]["Model"])
+    MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    model_path = MODEL_DIR / f"{best_name}.joblib"
+    joblib.dump(trained_models[best_name], model_path)
+    print(f"[INFO] Selected model: {best_name}")
+    print(f"[INFO] Saved pipeline to: {model_path}")
+    return best_name
 
 if __name__ == "__main__":
     df = load_raw_data()
-    X_train, X_test, y_train, y_test = split_data(df)
-    trained_pipelines = train_models(X_train, y_train)
-    save_best_model(trained_pipelines, "Random_Forest")
+    X_train, _, y_train, _ = split_data(df)
+    trained_models, cv_results = train_models(X_train, y_train)
+    save_best_model(trained_models, cv_results)
