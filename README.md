@@ -34,11 +34,11 @@ The dataset is small and its source is currently undocumented in the repository.
 
 ### Streamlit interface
 
-\`\`\`bash
+```bash
 python -m pip install -r requirements.txt
 python src/train.py
 streamlit run app.py
-\`\`\`
+```
 
 The Streamlit app requires a trained `.joblib` pipeline under `models/`. Model artifacts are not committed; run the training script first.
 
@@ -46,17 +46,17 @@ The Streamlit app requires a trained `.joblib` pipeline under `models/`. Model a
 
 Install the API dependencies and start the local API:
 
-\`\`\`bash
+```bash
 python -m pip install -r requirements-react-api.txt
 python -m uvicorn api:app --reload --host 127.0.0.1 --port 8000
-\`\`\`
+```
 
 In a second terminal:
 
-\`\`\`bash
+```bash
 cd frontend
 npm install
 npm run dev
-\`\`\`
+```
 
 Open the local URL printed by Vite. The React workbench also needs a trained `.joblib` file under `models/`. This project is for education, not clinical decisions.
